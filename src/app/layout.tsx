@@ -8,14 +8,21 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const siteUrl = "https://epha-creative-portfolio-o6pwciqn4-eeyob1997-ux.vercel.app";
+const siteUrl =
+  "https://epha-creative-portfolio-o6pwciqn4-eeyob1997-ux.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+
+  verification: {
+    google: "Ak6TSKETfFYDkc7F3cUdxE--5JHy2gklVFOj0trhbec",
+  },
+
   title: {
     default: "EPHA Creative | Graphic Design & Video Editing",
     template: "%s | EPHA Creative",
   },
+
   description:
     "Explore EPHA Creative's graphic design, branding, posters, social media creatives, and video editing portfolio for clients in Ethiopia and worldwide.",
   alternates: {

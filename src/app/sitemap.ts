@@ -1,6 +1,6 @@
-﻿import type { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 
-const siteUrl = "https://epha-creative-portfolio-o6pwciqn4-eeyob1997-ux.vercel.app";
+const siteUrl = "https://epha-creative-portfolio-git-main-eeyob1997-ux.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -11,3 +11,4 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 }
+

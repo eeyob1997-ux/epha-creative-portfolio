@@ -1,6 +1,6 @@
 "use client";
 
-import TestimonialForm from "@/components/TestimonialForm";
+import TestimonialForm from "../components/TestimonialForm";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -263,7 +263,7 @@ export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#0b0c0c] text-white">
       {/* Navigation */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0b0c0c]/90 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0b0c0c]/60 shadow-lg shadow-black/5 backdrop-blur-x2 transition-all duration-300">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6 md:px-8">
           <a
             href="#home"

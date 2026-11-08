@@ -5,14 +5,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#0b0c0a",
-        panel: "#151713",
-        lime: "#c5ff41",
-        muted: "#a5a89f",
+        ink: "#050606",
+        panel: "#0d0e0d",
+        amber: "#ffa94d",
+        "amber-light": "#ffc46b",
+        "amber-dark": "#ff6a3d",
+        muted: "#737373",
       },
       fontFamily: {
-        sans: ["var(--font-space-grotesk)", "sans-serif"],
-        brand: ["var(--font-space-grotesk)", "sans-serif"],
+        sans:   ["var(--font-space-grotesk)", "sans-serif"],
+        brand:  ["var(--font-space-grotesk)", "sans-serif"],
+        serif:  ["var(--font-playfair)", "Georgia", "serif"],
+        script: ["var(--font-caveat)", "cursive"],
       },
     },
   },

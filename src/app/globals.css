@@ -12,9 +12,16 @@ html {
 
 body {
   font-family: var(--font-space-grotesk), sans-serif;
-  background: #0b0c0a;
-  color: #f5f5ef;
+  background: #050606;
+  color: #f0f0ee;
   margin: 0;
+  cursor: none; /* custom cursor active */
+}
+
+/* restore default cursor on mobile / touch */
+@media (hover: none) {
+  body { cursor: auto; }
+  #custom-cursor { display: none !important; }
 }
 
 * {
@@ -22,8 +29,13 @@ body {
 }
 
 ::selection {
-  background: #c5ff41;
-  color: #0b0c0a;
+  background: #ffa94d;
+  color: #050606;
+}
+
+a, button { cursor: none; }
+@media (hover: none) {
+  a, button { cursor: auto; }
 }
 
 a {
@@ -31,29 +43,200 @@ a {
   text-decoration: none;
 }
 
-button,
-input,
-textarea,
-select {
+button, input, textarea, select {
   font: inherit;
 }
 
-.grain {
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.09) 0.6px,
-    transparent 0.6px
+/* ── CUSTOM CURSOR ────────────────────────────────── */
+#custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  background: #ffa94d;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, opacity 0.2s, background 0.2s;
+  mix-blend-mode: normal;
+}
+#custom-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(255, 169, 77, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: width 0.35s cubic-bezier(0.22,1,0.36,1),
+              height 0.35s cubic-bezier(0.22,1,0.36,1),
+              border-color 0.2s;
+}
+body:has(a:hover) #custom-cursor,
+body:has(button:hover) #custom-cursor {
+  width: 20px;
+  height: 20px;
+  background: #ffc46b;
+}
+body:has(a:hover) #custom-cursor-ring,
+body:has(button:hover) #custom-cursor-ring {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(255, 196, 107, 0.7);
+}
+
+/* ── SCROLLBAR ────────────────────────────────────── */
+::-webkit-scrollbar         { width: 4px; }
+::-webkit-scrollbar-track   { background: #050606; }
+::-webkit-scrollbar-thumb   {
+  background: linear-gradient(180deg, #ffc46b, #ff6a3d);
+  border-radius: 99px;
+}
+
+/* ── FILM GRAIN overlay ───────────────────────────── */
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+}
+
+/* ── AMBIENT BG ORBS (CSS, no JS) ─────────────────── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ── ANIMATED GRADIENT BORDER ─────────────────────── */
+@keyframes border-spin {
+  to { --angle: 360deg; }
+}
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.gradient-border {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#050606, #050606) padding-box,
+    conic-gradient(from var(--angle), #ffc46b, #ff6a3d, #050606 40%, #050606 60%, #ff6a3d, #ffc46b) border-box;
+  animation: border-spin 4s linear infinite;
+}
+
+/* ── SHIMMER ──────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    #ffc46b 0%,
+    #fff5e0 40%,
+    #ffc46b 60%,
+    #ff6a3d 100%
   );
-  background-size: 5px 5px;
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
 }
 
-.project-art {
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+/* ── FLOATING PARTICLES ───────────────────────────── */
+@keyframes float-up {
+  0%   { transform: translateY(0)   scale(1);   opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-120px) scale(0.4); opacity: 0; }
+}
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: radial-gradient(circle, #ffc46b, #ff6a3d);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float-up linear infinite;
 }
 
-.project-card:hover .project-art {
-  transform: scale(1.045);
+/* ── GLOW PULSE ───────────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.05; transform: scale(1);   }
+  50%       { opacity: 0.12; transform: scale(1.08); }
+}
+.glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
 }
 
+/* ── SCAN LINE (hero) ─────────────────────────────── */
+@keyframes scan {
+  0%   { top: -4px; }
+  100% { top: 100%; }
+}
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,169,77,0.15), transparent);
+  pointer-events: none;
+  animation: scan 5s linear infinite;
+  z-index: 25;
+}
+
+/* ── TYPEWRITER cursor blink ──────────────────────── */
+@keyframes blink { 50% { opacity: 0; } }
+.tw-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #ffa94d;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 0.8s step-end infinite;
+}
+
+/* ── SECTION SEPARATOR ────────────────────────────── */
+.sep {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,169,77,0.12), transparent);
+}
+
+/* ── CARD LIFT ────────────────────────────────────── */
+.card-hover {
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,169,77,0.15);
+}
+
+/* ── STATS COUNTER GLOW ───────────────────────────── */
+@keyframes count-glow {
+  0%, 100% { text-shadow: 0 0 12px rgba(255,169,77,0.0); }
+  50%       { text-shadow: 0 0 28px rgba(255,169,77,0.5); }
+}
+.stat-number {
+  animation: count-glow 2.5s ease-in-out infinite;
+}
+
+/* ── FONT BRAND ───────────────────────────────────── */
 .font-brand {
   font-family: var(--font-space-grotesk), sans-serif;
   font-weight: 700;

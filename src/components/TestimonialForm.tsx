@@ -41,18 +41,21 @@ const ratingLabels = [
 ];
 
 const sectionReveal = {
-  hidden: { opacity: 0, y: 35 },
+  hidden: { opacity: 0, y: 28 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.65, ease: "easeOut" as const },
+    transition: { duration: 0.6, ease: "easeOut" as const },
   },
 };
 
 const staggerContainer = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } },
+  visible: { transition: { staggerChildren: 0.1 } },
 };
+
+const glass =
+  "rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl";
 
 export default function TestimonialForm() {
   const reduceMotion = useReducedMotion();
@@ -117,52 +120,42 @@ export default function TestimonialForm() {
     }
   }
 
-  // Soft glass field, like the reference design
   const fieldClass =
-    "w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-neutral-500 hover:border-white/20 focus:border-[#c9ff27]/70 focus:bg-white/[0.06]";
+    "w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-neutral-500 hover:border-white/20 focus:border-[#ffa94d]/70 focus:bg-white/[0.06]";
 
   return (
     <section
       id="feedback"
-      className="relative isolate scroll-mt-20 overflow-hidden bg-[#050605]"
+      className="relative isolate scroll-mt-20 overflow-hidden px-4 py-20 sm:px-8"
     >
-      {/* Green glow at the top */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(ellipse_at_top,rgba(201,255,39,0.16),rgba(40,70,30,0.12)_40%,transparent_70%)]"
+        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[420px] w-[820px] max-w-full -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(255,169,77,0.1),transparent_70%)]"
       />
-
-      {/* Big faded watermark word */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-6 -z-10 select-none text-center text-[22vw] font-black uppercase leading-none tracking-tight text-white/[0.05] [mask-image:linear-gradient(to_bottom,black_30%,transparent_85%)] md:top-8 md:text-[10rem]"
-      >
-        Feedback
-      </div>
 
       <motion.div
         variants={staggerContainer}
         initial={reduceMotion ? "visible" : "hidden"}
         whileInView="visible"
         viewport={{ once: true, amount: 0.12 }}
-        className="relative mx-auto grid max-w-6xl items-start gap-6 px-4 pb-16 pt-24 sm:grid-cols-2 sm:gap-5 sm:px-6 md:gap-8 md:px-8 md:pb-20 md:pt-28"
+        className="relative mx-auto grid max-w-6xl items-start gap-10 md:grid-cols-2"
       >
         {/* Left side */}
         <div className="min-w-0">
           <motion.div variants={sectionReveal}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1 pr-4 text-xs font-medium text-white">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-[#c9ff27]">
-                <MessageSquare size={13} />
-              </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-[11px] text-white/80">
+              <MessageSquare size={12} className="text-[#ffa94d]" />
               Feedback
             </span>
 
-            <h2 className="mt-5 text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl">
-              Work with us?
+            <h2 className="mt-5 text-4xl font-medium leading-[1.1] tracking-[-0.03em] sm:text-5xl">
+              Worked with me?
               <br />
-              <span className="text-[#c9ff27]">Tell us about it.</span>
+              <span className="font-serif font-normal italic text-white/55">
+                Tell us about it.
+              </span>
             </h2>
-            <p className="mt-3 max-w-sm text-sm leading-6 text-neutral-400">
+            <p className="mt-4 max-w-sm text-sm leading-6 text-neutral-400">
               Your feedback helps us grow, improve and continue delivering
               creative solutions that make an impact.
             </p>
@@ -173,19 +166,18 @@ export default function TestimonialForm() {
               <motion.div
                 key={title}
                 variants={sectionReveal}
-                whileHover={reduceMotion ? undefined : { y: -3 }}
-                className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 md:gap-4 md:p-3.5 transition-colors hover:border-[#c9ff27]/40"
+                className={`${glass} group flex items-center gap-4 p-3.5 transition-colors hover:border-[#ffa94d]/40`}
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#ffa94d]/10 text-[#ffa94d]">
                   <Icon size={19} strokeWidth={1.6} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white">{title}</p>
+                  <p className="text-sm font-medium text-white">{title}</p>
                   <p className="mt-0.5 truncate text-xs text-neutral-400">
                     {subtitle}
                   </p>
                 </div>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-white transition group-hover:border-[#c9ff27] group-hover:bg-[#c9ff27] group-hover:text-black">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-white transition group-hover:border-[#ffa94d] group-hover:bg-gradient-to-r group-hover:from-[#ffc46b] group-hover:to-[#ff6a3d] group-hover:text-black">
                   <ArrowUpRight size={14} />
                 </span>
               </motion.div>
@@ -196,7 +188,7 @@ export default function TestimonialForm() {
         {/* Right side: form panel */}
         <motion.div
           variants={sectionReveal}
-          className="min-w-0 self-start rounded-3xl border border-white/10 bg-white/[0.03] p-2 shadow-[0_20px_60px_-25px_rgba(0,0,0,0.9)]"
+          className={`${glass} min-w-0 self-start p-4 sm:p-6`}
         >
           <AnimatePresence mode="wait" initial={false}>
             {success ? (
@@ -208,8 +200,8 @@ export default function TestimonialForm() {
                 role="status"
                 className="flex flex-col items-center px-4 py-14 text-center"
               >
-                <CheckCircle2 size={42} className="text-[#c9ff27]" />
-                <h3 className="mt-4 text-lg font-semibold">Thank you!</h3>
+                <CheckCircle2 size={42} className="text-[#ffa94d]" />
+                <h3 className="mt-4 text-lg font-medium">Thank you!</h3>
                 <p className="mt-2 max-w-xs text-sm leading-6 text-neutral-400">
                   Your feedback was submitted. It will appear on our portfolio
                   after approval.
@@ -217,7 +209,7 @@ export default function TestimonialForm() {
                 <button
                   type="button"
                   onClick={() => setSuccess(false)}
-                  className="mt-6 rounded-xl bg-white px-6 py-2.5 text-xs font-bold text-black transition hover:bg-[#c9ff27]"
+                  className="mt-6 rounded-full border border-white/10 bg-white/[0.04] px-6 py-2.5 text-xs font-semibold text-white transition hover:border-[#ffa94d]/60"
                 >
                   Send another
                 </button>
@@ -229,7 +221,7 @@ export default function TestimonialForm() {
                 initial={reduceMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={reduceMotion ? undefined : { opacity: 0 }}
-                className="space-y-2"
+                className="space-y-3"
               >
                 <div className="relative">
                   <label htmlFor="clientName" className="sr-only">
@@ -275,7 +267,7 @@ export default function TestimonialForm() {
                 </div>
 
                 {/* Rating row */}
-                <fieldset className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5">
+                <fieldset className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5">
                   <legend className="sr-only">
                     How would you rate your experience?
                   </legend>
@@ -291,9 +283,7 @@ export default function TestimonialForm() {
                         <motion.button
                           key={value}
                           type="button"
-                          aria-label={`${value} ${
-                            value === 1 ? "star" : "stars"
-                          }`}
+                          aria-label={`${value} ${value === 1 ? "star" : "stars"}`}
                           aria-pressed={rating === value}
                           whileHover={
                             reduceMotion ? undefined : { scale: 1.15 }
@@ -306,13 +296,13 @@ export default function TestimonialForm() {
                             setRating(value);
                             setError("");
                           }}
-                          className="rounded-md p-1 outline-none focus-visible:ring-2 focus-visible:ring-[#c9ff27]"
+                          className="rounded-md p-1 outline-none focus-visible:ring-2 focus-visible:ring-[#ffa94d]"
                         >
                           <Star
                             size={20}
                             className={`transition-colors duration-200 ${
                               active
-                                ? "fill-[#c9ff27] text-[#c9ff27]"
+                                ? "fill-[#ffa94d] text-[#ffa94d]"
                                 : "text-neutral-600"
                             }`}
                           />
@@ -322,9 +312,7 @@ export default function TestimonialForm() {
                   </div>
 
                   <span
-                    className={`text-xs ${
-                      shownRating ? "text-[#c9ff27]" : "text-neutral-500"
-                    }`}
+                    className={`text-xs ${shownRating ? "bg-gradient-to-r from-[#ffc46b] to-[#ff6a3d] bg-clip-text text-transparent" : "text-neutral-500"}`}
                   >
                     {shownRating
                       ? `${shownRating} out of 5 · ${ratingLabels[shownRating]}`
@@ -347,7 +335,7 @@ export default function TestimonialForm() {
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="Share your experience working with us..."
-                    className="min-h-[150px] w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition [overflow-wrap:anywhere] placeholder:text-neutral-500 hover:border-white/20 focus:border-[#c9ff27]/70 focus:bg-white/[0.06]"
+                    className="min-h-[150px] w-full resize-y rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm text-white outline-none transition [overflow-wrap:anywhere] placeholder:text-neutral-500 hover:border-white/20 focus:border-[#ffa94d]/70 focus:bg-white/[0.06]"
                   />
                   <p className="px-1 pt-1 text-right text-[11px] text-neutral-500">
                     {feedback.length}/2000
@@ -362,29 +350,28 @@ export default function TestimonialForm() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={reduceMotion ? undefined : { opacity: 0 }}
                       role="alert"
-                      className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300"
+                      className="rounded-2xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300"
                     >
                       {error}
                     </motion.p>
                   )}
                 </AnimatePresence>
 
-                {/* White submit button, like the reference */}
                 <button
                   type="submit"
                   disabled={loading || rating === 0}
-                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-black transition hover:bg-[#c9ff27] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group flex w-full items-center justify-between rounded-full bg-gradient-to-r from-[#ffc46b] to-[#ff6a3d] py-1.5 pl-6 pr-1.5 text-sm font-semibold text-black transition hover:from-white hover:to-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Submitting..." : "Submit feedback"}
-                  {!loading && (
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white">
                     <ArrowRight
                       size={16}
-                      className="transition-transform duration-300 group-hover:translate-x-1"
+                      className="transition-transform duration-300 group-hover:translate-x-0.5"
                     />
-                  )}
+                  </span>
                 </button>
 
-                <p className="pb-1 pt-1 text-center text-[11px] text-neutral-500">
+                <p className="pt-1 text-center text-[11px] text-neutral-500">
                   Your review will be visible on our portfolio after approval.
                 </p>
               </motion.form>

@@ -1,10 +1,23 @@
 ﻿import type { Metadata } from "next";
 import "./globals.css";
-import { Space_Grotesk } from "next/font/google";
+import { Space_Grotesk, Playfair_Display, Caveat } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-space-grotesk",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+  style: ["normal", "italic"],
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
   display: "swap",
 });
 
@@ -19,20 +32,20 @@ export const metadata: Metadata = {
   },
 
   title: {
-    default: "EPHA Creative | Graphic Design & Video Editing",
-    template: "%s | EPHA Creative",
+    default: "Creative Portfolio | Graphic Design & Video Editing",
+    template: "%s | Creative Portfolio",
   },
 
   description:
-    "Explore EPHA Creative's graphic design, branding, posters, social media creatives, and video editing portfolio for clients in Ethiopia and worldwide.",
+    "Explore creative graphic design, branding, posters, social media creatives, and video editing portfolio for clients in Ethiopia and worldwide.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     url: siteUrl,
-    siteName: "EPHA Creative",
-    title: "EPHA Creative | Graphic Design & Video Editing",
+    siteName: "Creative Portfolio",
+    title: "Creative Portfolio | Graphic Design & Video Editing",
     description:
       "Creative graphic design, branding, social media design, and video editing for clients in Ethiopia and worldwide.",
     locale: "en_US",
@@ -50,7 +63,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${spaceGrotesk.variable} font-sans antialiased`}>
+      <head>
+      </head>
+      <body className={`${spaceGrotesk.variable} ${playfair.variable} ${caveat.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

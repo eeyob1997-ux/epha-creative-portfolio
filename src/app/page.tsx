@@ -2,6 +2,7 @@
 
 import ContactSection from "@/components/ContactSection";
 import TestimonialForm from "../components/TestimonialForm";
+import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   motion,
@@ -74,20 +75,6 @@ type Testimonial = {
 };
 
 /* ── Static data ───────────────────────────────────── */
-const filters = [
-  "All",
-  "YouTube Design",
-  "Social Media Design",
-  "Poster Design",
-  "Branding",
-  "Digital Design",
-];
-const filterLabels: Record<string, string> = {
-  "Social Media Design": "Social Media",
-  "Poster Design": "Posters",
-  "Digital Design": "Digital",
-};
-
 const services = [
   {
     title: "Branding",
@@ -309,21 +296,6 @@ function HeroPortrait({
           }}
         />
 
-        {/* Floating 3D badge — top right */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.5 }}
-          style={{ transform: "translateZ(30px)" }}
-          className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-white/[0.1] bg-black/50 px-3 py-1.5 text-[11px] font-medium text-white/70 backdrop-blur-md"
-        >
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ffa94d] opacity-70" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ffa94d]" />
-          </span>
-          Open to work
-        </motion.div>
-
         {/* Bottom info strip */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -334,9 +306,7 @@ function HeroPortrait({
         >
           <div>
             <p className="text-sm font-bold text-white">Ephrem Eyob</p>
-            <p className="text-[11px] text-[#ffa94d]">
-              Graphic Designer · Ethiopia
-            </p>
+            <p className="text-[11px] text-[#ffa94d]">Graphic Designer</p>
           </div>
           <motion.a
             href="#portfolio"
@@ -348,28 +318,6 @@ function HeroPortrait({
           </motion.a>
         </motion.div>
       </div>
-
-      {/* Floating skill badges — 3D depth */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.6, duration: 0.5 }}
-        whileHover={{ scale: 1.05, y: -2 }}
-        style={{ transform: "translateZ(40px)" }}
-        className="absolute -right-4 top-[28%] rounded-xl border border-white/[0.1] bg-[#0d0e0d]/90 px-3 py-2 text-[11px] font-medium text-white/80 shadow-xl backdrop-blur-md"
-      >
-        ✦ Brand Identity
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.75, duration: 0.5 }}
-        whileHover={{ scale: 1.05, y: -2 }}
-        style={{ transform: "translateZ(40px)" }}
-        className="absolute -left-4 top-[55%] rounded-xl border border-[#ffa94d]/20 bg-[#0d0e0d]/90 px-3 py-2 text-[11px] font-medium text-[#ffa94d] shadow-xl backdrop-blur-md"
-      >
-        ◈ Visual Design
-      </motion.div>
     </motion.div>
   );
 }
@@ -428,8 +376,6 @@ function SectionTitle({
 
 /* ── Main page ─────────────────────────────────────── */
 export default function Home() {
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [showAllProjects, setShowAllProjects] = useState(false);
   const [showAllFeedback, setShowAllFeedback] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -590,11 +536,7 @@ export default function Home() {
   const portraitSmooth = useSpring(portraitY, { stiffness: 80, damping: 20 });
 
   /* derived */
-  const visible =
-    activeFilter === "All"
-      ? projects
-      : projects.filter((p) => p.category === activeFilter);
-  const displayed2 = showAllProjects ? visible : visible.slice(0, 6);
+  const displayed2 = projects.slice(0, 6);
   const displayedT = showAllFeedback ? testimonials : testimonials.slice(0, 3);
 
   /* shared tokens */
@@ -1011,46 +953,12 @@ export default function Home() {
               text="A curated collection of my latest design work."
             />
 
-            {/* Filter chips */}
-            <motion.div
-              variants={stagger}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="mb-10 flex flex-wrap justify-center gap-2"
-            >
-              {filters.map((f) => {
-                const active = activeFilter === f;
-                return (
-                  <motion.button
-                    key={f}
-                    variants={fadeIn}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.96 }}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => {
-                      setActiveFilter(f);
-                      setShowAllProjects(false);
-                    }}
-                    className={`rounded-full border px-4 py-2 text-xs font-medium transition-all ${
-                      active
-                        ? "border-transparent bg-gradient-to-r from-[#ffc46b] to-[#ff6a3d] text-black shadow-[0_2px_20px_rgba(255,169,77,0.4)]"
-                        : "border-white/[0.07] bg-white/[0.03] text-neutral-400 hover:border-[#ffa94d]/35 hover:text-white"
-                    }`}
-                  >
-                    {filterLabels[f] ?? f}
-                  </motion.button>
-                );
-              })}
-            </motion.div>
-
             {!projectsLoaded ? (
               <div className="flex items-center justify-center gap-3 py-16 text-sm text-neutral-600">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-[#ffa94d]" />
                 Loading…
               </div>
-            ) : visible.length === 0 ? (
+            ) : projects.length === 0 ? (
               <p className="py-12 text-center text-sm text-neutral-600">
                 No projects yet.
               </p>
@@ -1103,30 +1011,23 @@ export default function Home() {
                   </AnimatePresence>
                 </div>
 
-                {visible.length > 6 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    className="mt-10 flex justify-center"
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  className="mt-10 flex justify-center"
+                >
+                  <Link
+                    href="/portfolio"
+                    className={`${pill} group inline-flex items-center gap-2 px-7 py-3 text-sm`}
                   >
-                    <motion.button
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.97 }}
-                      type="button"
-                      onClick={() => setShowAllProjects((p) => !p)}
-                      className={`${pill} inline-flex items-center gap-2 px-7 py-3 text-sm`}
-                    >
-                      {showAllProjects ? "Show less" : "View all projects"}
-                      <motion.span
-                        animate={{ rotate: showAllProjects ? 180 : 0 }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        <ArrowDown size={15} />
-                      </motion.span>
-                    </motion.button>
-                  </motion.div>
-                )}
+                    View all projects
+                    <ArrowRight
+                      size={15}
+                      className="transition group-hover:translate-x-1"
+                    />
+                  </Link>
+                </motion.div>
               </>
             )}
           </div>

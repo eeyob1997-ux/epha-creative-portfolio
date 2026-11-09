@@ -12,6 +12,14 @@ import {
   MessageSquareQuote,
   Check,
   X,
+  LayoutDashboard,
+  FolderKanban,
+  Eye,
+  EyeOff,
+  Menu,
+  X as CloseIcon,
+  Image as ImageIcon,
+  ArrowUpRight,
 } from "lucide-react";
 
 type Project = {
@@ -74,6 +82,7 @@ export default function AdminPanel() {
   const [form, setForm] = useState(emptyForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [projectError, setProjectError] = useState("");
@@ -81,6 +90,25 @@ export default function AdminPanel() {
   const [testimonialError, setTestimonialError] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("Dashboard");
+
+  async function refreshProjects() {
+    try {
+      const response = await fetch("/api/admin/projects", { cache: "no-store" });
+
+      if (response.ok) {
+        setProjects(await response.json());
+        setProjectError("");
+      } else {
+        setProjectError(
+          await getApiError(response, "Could not load projects"),
+        );
+      }
+    } catch {
+      setProjectError("Could not connect to the server. Please refresh the page.");
+    }
+  }
 
   async function load() {
     try {
@@ -136,15 +164,18 @@ export default function AdminPanel() {
   function startEditing(project: Project) {
     setEditingId(project.id);
     setImageFile(null);
+
     if (imageInputRef.current) {
       imageInputRef.current.value = "";
     }
+
     setForm({
       title: project.title,
       category: project.category,
       image_url: project.image_url,
       published: project.published,
     });
+
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -153,9 +184,11 @@ export default function AdminPanel() {
     setEditingId(null);
     setForm(emptyForm);
     setImageFile(null);
+
     if (imageInputRef.current) {
       imageInputRef.current.value = "";
     }
+
     setNotice("");
   }
 
@@ -175,6 +208,7 @@ export default function AdminPanel() {
           method: "POST",
           body: uploadForm,
         });
+
         const uploadResult = await uploadResponse.json();
 
         if (!uploadResponse.ok) {
@@ -203,9 +237,11 @@ export default function AdminPanel() {
 
       setForm(emptyForm);
       setImageFile(null);
+
       if (imageInputRef.current) {
         imageInputRef.current.value = "";
       }
+
       setEditingId(null);
       setNotice(
         wasEditing
@@ -213,7 +249,7 @@ export default function AdminPanel() {
           : "Project added successfully.",
       );
 
-      await load();
+      await refreshProjects();
     } catch (error) {
       setNotice(
         error instanceof Error ? error.message : "Something went wrong.",
@@ -244,7 +280,7 @@ export default function AdminPanel() {
         project.published ? "Project unpublished." : "Project published.",
       );
 
-      await load();
+      await refreshProjects();
     } catch (error) {
       setNotice(
         error instanceof Error ? error.message : "Something went wrong.",
@@ -354,376 +390,697 @@ export default function AdminPanel() {
     }
   }
 
+  const publishedProjects = projects.filter(
+    (project) => project.published,
+  ).length;
+
+  const navItems = [
+    { icon: LayoutDashboard, label: "Dashboard", target: "dashboard" },
+    { icon: FolderKanban, label: "Projects", target: "projects" },
+    { icon: Inbox, label: "Messages", target: "messages" },
+    {
+      icon: MessageSquareQuote,
+      label: "Testimonials",
+      target: "testimonials",
+    },
+  ];
+
+  function navigateToSection(label: string, target: string) {
+    setActiveSection(label);
+    setSidebarOpen(false);
+
+    const section = document.getElementById(target);
+
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
+
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-5 py-8 md:px-10">
-      <header className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
-        <div>
-          <Link
-            href="/"
-            className="text-xs uppercase tracking-widest text-lime"
-          >
-            ← View website
-          </Link>
-
-          <h1 className="mt-3 text-4xl font-black tracking-tight">
-            Studio admin<span className="text-lime">.</span>
-          </h1>
-        </div>
-
+    <main className="min-h-screen bg-[#171717] text-[#F5F5F5]">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
         <button
           type="button"
-          onClick={() => void logout()}
-          className="flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm hover:border-lime"
-        >
-          <LogOut size={16} />
-          Sign out
-        </button>
-      </header>
-
-      {notice && (
-        <p role="status" className="mb-6 text-sm text-lime">
-          {notice}
-        </p>
+          aria-label="Close menu"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/70 lg:hidden"
+        />
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
-        <section className="rounded-2xl border border-white/10 bg-panel p-6">
-          <div className="mb-6 flex items-center gap-3">
-            {editingId ? (
-              <Pencil className="text-lime" />
-            ) : (
-              <Plus className="text-lime" />
-            )}
+      {/* SIDEBAR */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/[0.08] bg-[#111111] p-6 text-[#F5F5F5] transition-transform duration-200 ease-out lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-2xl font-black tracking-tight">
+            Studio<span className="text-[#FF5A1F]">.</span>
+          </Link>
 
-            <h2 className="text-2xl font-bold">
-              {editingId ? "Edit project" : "Add a project"}
-            </h2>
-          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="rounded-lg p-2 text-white/60 transition-all duration-150 ease-out hover:bg-white/10 lg:hidden"
+          >
+            <CloseIcon size={20} />
+          </button>
+        </div>
 
-          <form onSubmit={saveProject} className="space-y-4">
-            <label className="block text-xs uppercase tracking-wider text-white/60">
-              Project title
-              <input
-                required
-                disabled={busy}
-                maxLength={120}
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="e.g. Worship Poster"
-                className="mt-2 w-full rounded-lg border border-white/10 bg-black/30 p-3 text-sm normal-case text-white outline-none focus:border-lime"
-              />
-            </label>
+        <div className="mt-10">
+          <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+            Management
+          </p>
 
-            <label className="block text-xs uppercase tracking-wider text-white/60">
-              Category
-              <input
-                required
-                disabled={busy}
-                maxLength={80}
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                placeholder="Poster Design"
-                className="mt-2 w-full rounded-lg border border-white/10 bg-black/30 p-3 text-sm normal-case text-white outline-none focus:border-lime"
-              />
-            </label>
+          <nav className="space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
 
-            <label className="block text-xs uppercase tracking-wider text-white/60">
-              Image path or URL
-              <input
-                required={!imageFile}
-                disabled={busy}
-                maxLength={2000}
-                value={form.image_url}
-                onChange={(e) =>
-                  setForm({ ...form, image_url: e.target.value })
-                }
-                placeholder="https://... or upload an image below"
-                className="mt-2 w-full rounded-lg border border-white/10 bg-black/30 p-3 text-sm normal-case text-white outline-none focus:border-lime"
-              />
-              <span className="mt-2 block normal-case text-white/40">
-                Use an image URL or choose a file to upload.
-              </span>
-            </label>
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => navigateToSection(item.label, item.target)}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-150 ease-out ${
+                    activeSection === item.label
+                      ? "border border-white/[0.08] bg-gradient-to-r from-[#292929] to-[#1d1d1d] text-white shadow-sm"
+                      : "border border-transparent text-[#9CA3AF] hover:bg-white/[0.05] hover:text-[#F5F5F5]"
+                  }`}
+                >
+                  <Icon
+                    size={18}
+                    className={
+                      activeSection === item.label ? "text-[#FF5A1F]" : ""
+                    }
+                  />
+                  {item.label}
 
-            <label className="block text-xs uppercase tracking-wider text-white/60">
-              Upload image
-              <input
-                ref={imageInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                disabled={busy}
-                onChange={(event) =>
-                  setImageFile(event.target.files?.[0] ?? null)
-                }
-                className="mt-2 block w-full text-sm normal-case text-white file:mr-3 file:rounded-full file:border-0 file:bg-lime file:px-4 file:py-2 file:font-semibold file:text-ink"
-              />
-              <span className="mt-2 block normal-case text-white/40">
-                PNG, JPG, WEBP, or GIF; maximum file size 5 MB.
-                {imageFile ? ` Selected: ${imageFile.name}` : ""}
-              </span>
-            </label>
+                  {item.label === "Messages" && messages.length > 0 && (
+                    <span className="ml-auto rounded-full border border-white/[0.08] bg-white/[0.06] px-2 py-0.5 text-xs text-[#D1D5DB]">
+                      {messages.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={form.published}
-                onChange={(e) =>
-                  setForm({ ...form, published: e.target.checked })
-                }
-                disabled={busy}
-                className="accent-lime"
-              />
-              Publish immediately
-            </label>
+        <div className="mt-auto border-t border-white/[0.08] pt-5">
+          <Link
+            href="/"
+            className="mb-3 flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-[#9CA3AF] transition-all duration-150 ease-out hover:bg-white/[0.05] hover:text-white"
+          >
+            <ExternalLink size={17} />
+            View website
+          </Link>
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-full bg-lime px-5 py-3 font-semibold text-ink disabled:opacity-50"
-            >
-              {busy
-                ? "Saving..."
-                : editingId
-                  ? "Update project"
-                  : "Save project"}
-            </button>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-[#9CA3AF] transition-all duration-150 ease-out hover:bg-red-500/10 hover:text-[#EF4444]"
+          >
+            <LogOut size={17} />
+            Sign out
+          </button>
+        </div>
+      </aside>
 
-            {editingId && (
+      {/* MAIN CONTENT */}
+      <div className="lg:ml-72">
+        {/* TOP HEADER */}
+        <header className="sticky top-0 z-20 border-b border-white/[0.08] bg-[#151515]/95 px-5 py-4 backdrop-blur md:px-8 lg:px-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={cancelEditing}
-                disabled={busy}
-                className="w-full rounded-full border border-white/20 px-5 py-3 text-sm hover:border-lime disabled:opacity-50"
+                onClick={() => setSidebarOpen(true)}
+                className="rounded-xl border border-white/[0.08] bg-[#222222] p-2.5 text-[#F5F5F5] transition-all duration-150 ease-out hover:bg-[#2A2A2A] lg:hidden"
               >
-                Cancel editing
+                <Menu size={20} />
               </button>
-            )}
-          </form>
-        </section>
 
-        <section>
-          <h2 className="mb-4 text-2xl font-bold">
-            Projects <span className="text-lime">({projects.length})</span>
-          </h2>
-
-          {projectError && (
-            <p
-              role="alert"
-              className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
-            >
-              {projectError}
-            </p>
-          )}
-
-          {loading ? (
-            <p className="text-sm text-white/50">Loading projects...</p>
-          ) : (
-            <div className="space-y-3">
-              {projects.length === 0 && !projectError && (
-                <p className="rounded-xl border border-dashed border-white/20 p-6 text-sm text-white/50">
-                  No projects found.
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7280]">
+                  Admin Panel
                 </p>
-              )}
+                <h1 className="mt-1 text-xl font-bold tracking-tight text-[#F5F5F5]">
+                  {activeSection}<span className="text-[#FF5A1F]">.</span>
+                </h1>
+              </div>
+            </div>
 
-              {projects.map((project) => (
-                <article
-                  key={project.id}
-                  className="flex items-center gap-4 rounded-xl border border-white/10 bg-panel p-4"
-                >
-                  <div
-                    className="h-16 w-20 shrink-0 rounded-lg bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url("${project.image_url}")`,
-                    }}
-                  />
+            <div className="flex items-center gap-3">
+              <div className="hidden text-right sm:block">
+                <p className="text-sm font-semibold text-[#F5F5F5]">Studio Admin</p>
+                <p className="text-xs text-[#6B7280]">Portfolio management</p>
+              </div>
 
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold">{project.title}</h3>
+              <div className="grid h-10 w-10 place-items-center rounded-full border border-white/[0.08] bg-[#2A2A2A] text-sm font-bold text-[#FF6B35]">
+                SA
+              </div>
+            </div>
+          </div>
+        </header>
 
-                    <p className="mt-1 text-xs text-white/45">
-                      {project.category}
-                    </p>
-
-                    <a
-                      className="mt-1 inline-flex items-center gap-1 text-xs text-lime"
-                      href={project.image_url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View image <ExternalLink size={12} />
-                    </a>
-
-                    <p className="mt-1 text-xs text-white/50">
-                      {project.published ? "Published" : "Draft"}
-                    </p>
-
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void togglePublished(project)}
-                        className="text-xs text-lime underline disabled:opacity-50"
-                      >
-                        {project.published ? "Unpublish" : "Publish"}
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => startEditing(project)}
-                        className="inline-flex items-center gap-1 text-xs text-lime underline disabled:opacity-50"
-                      >
-                        <Pencil size={12} />
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void deleteProject(project.id)}
-                    aria-label={`Delete ${project.title}`}
-                    className="rounded-full p-2 text-white/50 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
-                  >
-                    <Trash2 size={17} />
-                  </button>
-                </article>
-              ))}
+        <div className="mx-auto max-w-7xl p-5 md:p-7 lg:p-9">
+          {/* SUCCESS / ERROR NOTICE */}
+          {notice && (
+            <div className="mb-8 flex items-center gap-3 rounded-2xl border border-[#A3E635]/20 bg-[#A3E635]/10 px-5 py-4 text-sm font-medium text-[#D9F99D]">
+              <Check size={18} />
+              {notice}
             </div>
           )}
 
-          <h2 className="mb-4 mt-10 flex items-center gap-2 text-2xl font-bold">
-            <Inbox className="text-lime" />
-            Contact messages{" "}
-            <span className="text-lime">({messages.length})</span>
-          </h2>
-
-          {messageError && (
-            <p
-              role="alert"
-              className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
-            >
-              {messageError}
-            </p>
-          )}
-
-          <div className="space-y-3">
-            {messages.length === 0 && !messageError && (
-              <p className="rounded-xl border border-dashed border-white/20 p-6 text-sm text-white/50">
-                No messages received yet.
+          {/* WELCOME */}
+          <section
+            id="dashboard"
+            className="scroll-mt-28 mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end"
+          >
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-[#F5F5F5] md:text-4xl">
+                Welcome back, Admin.
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#9CA3AF]">
+                Manage your portfolio projects, review client messages, and
+                approve testimonials from one place.
               </p>
-            )}
+            </div>
 
-            {messages.map((message) => (
-              <article
-                key={message.id}
-                className="rounded-xl border border-white/10 bg-panel p-4"
-              >
-                <div className="flex flex-wrap justify-between gap-2">
-                  <h3 className="font-semibold">{message.name}</h3>
-                  <time className="text-xs text-white/40">
-                    {new Date(message.created_at).toLocaleDateString()}
-                  </time>
+            <button
+              type="button"
+              onClick={() => {
+                cancelEditing();
+                document.getElementById("project-form")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF5A1F] px-5 py-3 text-sm font-semibold text-white transition-all duration-150 ease-out hover:bg-[#FF6B35]"
+            >
+              <Plus size={18} />
+              Add new project
+            </button>
+          </section>
+
+          {/* STATISTICS */}
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <article className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#252525] to-[#202020] p-5 shadow-lg shadow-black/10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-[#9CA3AF]">
+                    Total Projects
+                  </p>
+                  <p className="mt-3 text-4xl font-bold text-[#F5F5F5]">{projects.length}</p>
                 </div>
 
-                <a
-                  href={`mailto:${message.email}`}
-                  className="text-sm text-lime"
-                >
-                  {message.email}
-                </a>
+                <div className="rounded-xl border border-[#FF5A1F]/15 bg-[#FF5A1F]/10 p-3 text-[#FF6B35]">
+                  <FolderKanban size={21} />
+                </div>
+              </div>
+            </article>
 
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-white/70">
-                  {message.message}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-      </div>
+            <article className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#252525] to-[#202020] p-5 shadow-lg shadow-black/10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-[#9CA3AF]">Published</p>
+                  <p className="mt-3 text-4xl font-bold text-[#F5F5F5]">
+                    {publishedProjects}
+                  </p>
+                </div>
 
-      <section className="mt-12">
-        <h2 className="mb-4 flex items-center gap-3 text-2xl font-bold">
-          <MessageSquareQuote className="text-lime" />
-          Testimonials awaiting approval{" "}
-          <span className="text-lime">({testimonials.length})</span>
-        </h2>
+                <div className="rounded-xl border border-[#A3E635]/15 bg-[#A3E635]/10 p-3 text-[#A3E635]">
+                  <Eye size={21} />
+                </div>
+              </div>
+            </article>
 
-        {testimonialError && (
-          <p
-            role="alert"
-            className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
+            <article className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#252525] to-[#202020] p-5 shadow-lg shadow-black/10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-[#9CA3AF]">Messages</p>
+                  <p className="mt-3 text-4xl font-bold text-[#F5F5F5]">{messages.length}</p>
+                </div>
+
+                <div className="rounded-xl border border-white/[0.08] bg-[#2A2A2A] p-3 text-[#9CA3AF]">
+                  <Inbox size={21} />
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#252525] to-[#202020] p-5 shadow-lg shadow-black/10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-[#9CA3AF]">
+                    Pending Reviews
+                  </p>
+                  <p className="mt-3 text-4xl font-bold text-[#F5F5F5]">
+                    {testimonials.length}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-white/[0.08] bg-[#2A2A2A] p-3 text-[#9CA3AF]">
+                  <MessageSquareQuote size={21} />
+                </div>
+              </div>
+            </article>
+          </section>
+
+          {/* PROJECT MANAGEMENT */}
+          <section
+            id="projects"
+            className="scroll-mt-28 mt-10 grid gap-8 xl:grid-cols-[400px_minmax(0,1fr)]"
           >
-            {testimonialError}
-          </p>
-        )}
+            {/* FORM */}
+            <section
+              id="project-form"
+              className="scroll-mt-28 h-fit rounded-2xl border border-white/[0.08] bg-[#222222] p-6 shadow-xl shadow-black/10"
+            >
+              <div className="mb-7 flex items-center justify-between">
+                <div>
+                  <div className="mb-3 grid h-11 w-11 place-items-center rounded-xl border border-[#FF5A1F]/20 bg-[#FF5A1F]/10">
+                    {editingId ? (
+                      <Pencil size={20} className="text-[#FF6B35]" />
+                    ) : (
+                      <Plus size={21} className="text-[#FF6B35]" />
+                    )}
+                  </div>
 
-        {testimonials.length === 0 && !testimonialError ? (
-          <p className="rounded-xl border border-dashed border-white/20 p-6 text-sm text-white/50">
-            No pending testimonials.
-          </p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {testimonials.map((testimonial) => (
-              <article
-                key={testimonial.id}
-                className="min-w-0 max-w-full rounded-2xl border border-white/10 bg-panel p-5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <h2 className="text-xl font-bold text-[#F5F5F5]">
+                    {editingId ? "Edit project" : "New project"}
+                  </h2>
+
+                  <p className="mt-1 text-sm text-[#9CA3AF]">
+                    Add your work to the portfolio.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={saveProject} className="space-y-5">
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                    Project title
+                  </span>
+
+                  <input
+                    required
+                    disabled={busy}
+                    maxLength={120}
+                    value={form.title}
+                    onChange={(e) =>
+                      setForm({ ...form, title: e.target.value })
+                    }
+                    placeholder="e.g. Worship Poster"
+                    className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#1C1C1C] px-4 py-3 text-sm text-[#F5F5F5] outline-none placeholder:text-[#6B7280] transition-all duration-150 ease-out focus:border-[#FF5A1F] focus:ring-2 focus:ring-[#FF5A1F]/20"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                    Category
+                  </span>
+
+                  <input
+                    required
+                    disabled={busy}
+                    maxLength={80}
+                    value={form.category}
+                    onChange={(e) =>
+                      setForm({ ...form, category: e.target.value })
+                    }
+                    placeholder="Poster Design"
+                    className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#1C1C1C] px-4 py-3 text-sm text-[#F5F5F5] outline-none placeholder:text-[#6B7280] transition-all duration-150 ease-out focus:border-[#FF5A1F] focus:ring-2 focus:ring-[#FF5A1F]/20"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                    Image URL
+                  </span>
+
+                  <input
+                    required={!imageFile}
+                    disabled={busy}
+                    maxLength={2000}
+                    value={form.image_url}
+                    onChange={(e) =>
+                      setForm({ ...form, image_url: e.target.value })
+                    }
+                    placeholder="https://..."
+                    className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#1C1C1C] px-4 py-3 text-sm text-[#F5F5F5] outline-none placeholder:text-[#6B7280] transition-all duration-150 ease-out focus:border-[#FF5A1F] focus:ring-2 focus:ring-[#FF5A1F]/20"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                    <ImageIcon size={14} />
+                    Upload image
+                  </span>
+
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    disabled={busy}
+                    onChange={(event) =>
+                      setImageFile(event.target.files?.[0] ?? null)
+                    }
+                    className="mt-2 block w-full rounded-xl border border-dashed border-white/[0.12] bg-[#1C1C1C] p-3 text-xs text-[#D1D5DB] file:mr-3 file:rounded-lg file:border-0 file:bg-[#FF5A1F] file:px-3 file:py-2 file:font-bold file:text-white"
+                  />
+
+                  <p className="mt-2 text-xs text-[#6B7280]">
+                    PNG, JPG, WEBP or GIF. Maximum 5 MB.
+                    {imageFile ? ` Selected: ${imageFile.name}` : ""}
+                  </p>
+                </label>
+
+                <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/[0.08] bg-[#1C1C1C] p-4">
                   <div>
-                    <h3 className="font-semibold">{testimonial.client_name}</h3>
-
-                    <p className="text-sm text-white/50">
-                      {testimonial.project_name}
-                    </p>
-
-                    <p
-                      className="mt-1 text-sm text-amber-300"
-                      aria-label={`${testimonial.rating} out of 5 stars`}
-                    >
-                      {"★".repeat(testimonial.rating)}
-                      {"☆".repeat(5 - testimonial.rating)}
+                    <p className="text-sm font-bold">Publish immediately</p>
+                    <p className="mt-1 text-xs text-[#6B7280]">
+                      Make this project visible on your website.
                     </p>
                   </div>
 
-                  <time className="text-xs text-white/40">
-                    {new Date(testimonial.created_at).toLocaleDateString()}
-                  </time>
-                </div>
+                  <input
+                    type="checkbox"
+                    checked={form.published}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        published: e.target.checked,
+                      })
+                    }
+                    disabled={busy}
+                    className="h-5 w-5 accent-[#FF5A1F]"
+                  />
+                </label>
 
-                <p className="mt-4 min-w-0 max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm leading-relaxed text-white/70">
-                  {testimonial.feedback}
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full rounded-xl bg-[#FF5A1F] px-5 py-3.5 text-sm font-bold text-white transition-all duration-150 ease-out hover:bg-[#FF6B35] disabled:opacity-50"
+                >
+                  {busy
+                    ? "Saving..."
+                    : editingId
+                      ? "Update project"
+                      : "Save project"}
+                </button>
+
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    disabled={busy}
+                    className="w-full rounded-xl border border-white/[0.08] bg-[#2A2A2A] px-5 py-3 text-sm font-semibold text-[#D1D5DB] transition-all duration-150 ease-out hover:bg-[#333333]"
+                  >
+                    Cancel editing
+                  </button>
+                )}
+              </form>
+            </section>
+
+            {/* PROJECT LIST */}
+            <section>
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#6B7280]">
+                    Portfolio
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold text-[#F5F5F5]">
+                    Your Projects
+                    <span className="ml-2 text-[#FF6B35]">({projects.length})</span>
+                  </h2>
+                </div>
+              </div>
+
+              {projectError && (
+                <p className="mb-4 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 p-4 text-sm text-[#FCA5A5]">
+                  {projectError}
                 </p>
+              )}
 
-                <div className="mt-5 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void updateTestimonial(testimonial, "approve")
-                    }
-                    className="flex items-center gap-2 rounded-full bg-lime px-4 py-2 text-sm font-semibold text-ink"
-                  >
-                    <Check size={16} />
-                    Approve
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void updateTestimonial(testimonial, "reject")
-                    }
-                    className="flex items-center gap-2 rounded-full border border-red-400/40 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10"
-                  >
-                    <X size={16} />
-                    Reject
-                  </button>
+              {loading ? (
+                <div className="rounded-2xl border border-white/[0.08] bg-[#222222] p-8 text-sm text-[#9CA3AF]">
+                  Loading projects...
                 </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {projects.length === 0 && !projectError && (
+                    <div className="rounded-2xl border border-dashed border-white/[0.12] bg-[#222222] p-10 text-center text-sm text-[#9CA3AF] md:col-span-2">
+                      No projects found. Add your first project.
+                    </div>
+                  )}
+
+                  {projects.map((project) => (
+                    <article
+                      key={project.id}
+                      className="group overflow-hidden rounded-2xl border border-white/[0.08] bg-[#222222] shadow-lg shadow-black/10 transition-all duration-150 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:shadow-xl"
+                    >
+                      <div className="relative h-48 overflow-hidden bg-[#1C1C1C]">
+                        <div
+                          className="h-full w-full bg-cover bg-center transition-transform duration-200 ease-out group-hover:scale-105"
+                          style={{
+                            backgroundImage: `url("${project.image_url}")`,
+                          }}
+                        />
+
+                        <div className="absolute right-3 top-3">
+                          <span
+                            className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                              project.published
+                                ? "bg-[#A3E635] text-[#0b0c0a]"
+                                : "bg-[#3A3A3A] text-[#D1D5DB]"
+                            }`}
+                          >
+                            {project.published ? "Published" : "Draft"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-5">
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#6B7280]">
+                          {project.category}
+                        </p>
+
+                        <h3 className="mt-2 truncate text-lg font-bold text-[#F5F5F5]">
+                          {project.title}
+                        </h3>
+
+                        <div className="mt-5 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void togglePublished(project)}
+                              className="rounded-lg border border-white/[0.08] bg-[#2A2A2A] p-2.5 text-[#D1D5DB] transition-all duration-150 ease-out hover:border-[#FF5A1F]/30 hover:bg-[#FF5A1F]/10 hover:text-[#FF6B35] disabled:opacity-50"
+                              aria-label={
+                                project.published
+                                  ? "Unpublish project"
+                                  : "Publish project"
+                              }
+                            >
+                              {project.published ? (
+                                <EyeOff size={16} />
+                              ) : (
+                                <Eye size={16} />
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => startEditing(project)}
+                              className="rounded-lg border border-white/[0.08] bg-[#2A2A2A] p-2.5 text-[#D1D5DB] transition-all duration-150 ease-out hover:border-[#FF5A1F]/30 hover:bg-[#FF5A1F]/10 hover:text-[#FF6B35] disabled:opacity-50"
+                              aria-label="Edit project"
+                            >
+                              <Pencil size={16} />
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void deleteProject(project.id)}
+                              className="rounded-lg border border-[#EF4444]/15 bg-[#EF4444]/10 p-2.5 text-[#F87171] transition-all duration-150 ease-out hover:bg-[#EF4444] hover:text-white disabled:opacity-50"
+                              aria-label={`Delete ${project.title}`}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+
+                          <a
+                            href={project.image_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-xs font-bold text-[#9CA3AF] transition-all duration-150 ease-out hover:text-[#FF6B35]"
+                          >
+                            View
+                            <ArrowUpRight size={15} />
+                          </a>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </section>
+
+          {/* MESSAGES */}
+          <section id="messages" className="scroll-mt-28 mt-12">
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#6B7280]">
+                Inbox
+              </p>
+
+              <h2 className="mt-1 flex items-center gap-2 text-2xl font-bold text-[#F5F5F5]">
+                <Inbox size={24} className="text-[#FF6B35]" />
+                Contact Messages
+                <span className="text-[#9CA3AF]">({messages.length})</span>
+              </h2>
+            </div>
+
+            {messageError && (
+              <p className="mb-4 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 p-4 text-sm text-[#FCA5A5]">
+                {messageError}
+              </p>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {messages.length === 0 && !messageError && (
+                <div className="rounded-2xl border border-dashed border-white/[0.12] bg-[#222222] p-8 text-sm text-[#9CA3AF] md:col-span-2 xl:col-span-3">
+                  No messages received yet.
+                </div>
+              )}
+
+              {messages.map((message) => (
+                <article
+                  key={message.id}
+                  className="rounded-2xl border border-white/[0.08] bg-[#222222] p-5 shadow-lg shadow-black/10"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#FF5A1F]/20 bg-[#FF5A1F]/10 text-sm font-bold text-[#FF6B35]">
+                      {message.name.charAt(0).toUpperCase()}
+                    </div>
+
+                    <time className="text-right text-xs text-[#6B7280]">
+                      {new Date(message.created_at).toLocaleDateString()}
+                    </time>
+                  </div>
+
+                  <h3 className="mt-4 font-semibold text-[#F5F5F5]">{message.name}</h3>
+
+                  <a
+                    href={`mailto:${message.email}`}
+                    className="mt-1 block truncate text-sm text-[#FF8A5B] transition-colors duration-150 ease-out hover:text-[#FF6B35] hover:underline"
+                  >
+                    {message.email}
+                  </a>
+
+                  <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-[#9CA3AF]">
+                    {message.message}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* TESTIMONIALS */}
+          <section id="testimonials" className="scroll-mt-28 mt-12 pb-10">
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#6B7280]">
+                Reviews
+              </p>
+
+              <h2 className="mt-1 flex items-center gap-2 text-2xl font-bold text-[#F5F5F5]">
+                <MessageSquareQuote size={24} className="text-[#FF6B35]" />
+                Testimonials Awaiting Approval
+                <span className="text-[#9CA3AF]">({testimonials.length})</span>
+              </h2>
+            </div>
+
+            {testimonialError && (
+              <p className="mb-4 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 p-4 text-sm text-[#FCA5A5]">
+                {testimonialError}
+              </p>
+            )}
+
+            {testimonials.length === 0 && !testimonialError ? (
+              <div className="rounded-2xl border border-dashed border-white/[0.12] bg-[#222222] p-8 text-sm text-[#9CA3AF]">
+                No pending testimonials.
+              </div>
+            ) : (
+              <div className="grid gap-5 lg:grid-cols-2">
+                {testimonials.map((testimonial) => (
+                  <article
+                    key={testimonial.id}
+                    className="rounded-2xl border border-white/[0.08] bg-[#222222] p-6 shadow-lg shadow-black/10"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-[#F5F5F5]">
+                          {testimonial.client_name}
+                        </h3>
+
+                        <p className="mt-1 text-sm text-[#9CA3AF]">
+                          {testimonial.project_name}
+                        </p>
+
+                        <p
+                          className="mt-3 text-sm tracking-wider text-[#FF8A5B]"
+                          aria-label={`${testimonial.rating} out of 5 stars`}
+                        >
+                          {"★".repeat(testimonial.rating)}
+                          {"☆".repeat(5 - testimonial.rating)}
+                        </p>
+                      </div>
+
+                      <time className="text-xs text-[#6B7280]">
+                        {new Date(testimonial.created_at).toLocaleDateString()}
+                      </time>
+                    </div>
+
+                    <p className="mt-5 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#9CA3AF]">
+                      "{testimonial.feedback}"
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          void updateTestimonial(testimonial, "approve")
+                        }
+                        className="flex items-center gap-2 rounded-xl bg-[#A3E635] px-5 py-3 text-sm font-bold text-[#171717] transition-all duration-150 ease-out hover:bg-[#B4F34D] disabled:opacity-50"
+                      >
+                        <Check size={17} />
+                        Approve
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          void updateTestimonial(testimonial, "reject")
+                        }
+                        className="flex items-center gap-2 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/10 px-5 py-3 text-sm font-bold text-[#F87171] transition-all duration-150 ease-out hover:bg-[#EF4444]/20 disabled:opacity-50"
+                      >
+                        <X size={17} />
+                        Reject
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
     </main>
   );
 }

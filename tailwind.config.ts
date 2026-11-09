@@ -10,6 +10,7 @@ const config: Config = {
         amber: "#ffa94d",
         "amber-light": "#ffc46b",
         "amber-dark": "#ff6a3d",
+        lime: "#a3e635",
         muted: "#737373",
       },
       fontFamily: {
